@@ -2,6 +2,7 @@ package com.dstrLogAggr.Log_Aggregator.controller;
 
 import com.dstrLogAggr.Log_Aggregator.model.LogEntry;
 import com.dstrLogAggr.Log_Aggregator.repository.LogBackRepo;
+import com.dstrLogAggr.Log_Aggregator.service.LogKafkaConsumer;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -20,6 +21,9 @@ public class LogIngestionController {
     @Autowired
     private LogBackRepo logRepository;
 
+    @Autowired
+    private LogKafkaConsumer logKafkaConsumer;
+
     private static final Logger logger = LoggerFactory.getLogger(LogIngestionController.class);
 
     @PostMapping("/log-ingestor")
@@ -31,20 +35,13 @@ public class LogIngestionController {
 
         logger.debug("Entered ingestLog method to save data in MongoDB");
 
-        logRepository.save(logEntry);
+        logKafkaConsumer.listen(mapper.writeValueAsString(logEntry));
 
         logger.debug("Data saved in MongoDB");
 
         return ResponseEntity.ok("Log stored");
     }
 
-//    @PostMapping("/log-ingestor")
-//    public ResponseEntity<?> ingestLogRaw(@RequestBody String raw) throws JsonProcessingException {
-//        System.out.println("Raw request: " + raw);
-//        ObjectMapper mapper = new ObjectMapper();
-//        LogEntry entry = mapper.readValue(raw, LogEntry.class);
-//        System.out.println("Mapped: " + entry);
-//        return ResponseEntity.ok("Log stored");
-//    }
+
 
 }
