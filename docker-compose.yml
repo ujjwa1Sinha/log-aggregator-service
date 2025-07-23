@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  log-aggregator:
+    image: log-aggregator-service:2.0
+    container_name: log-aggregator
+    networks:
+      - app-network
+    ports:
+      - "8080:8080"
+    depends_on:
+      - kafka
+      - mongodb
+      - redis
+    environment:
+      - MONGO_URI=mongodb+srv://sinhaujjwal221:ujjwal6061@cluster0.9raqwft.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+      - KAFKA_BOOTSTRAP_SERVER=kafka:9092
+      - KAFKA_TOPIC=log-data
+      - REDIS_HOST=redis
+
+
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    networks:
+      - app-network
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=sinhaujjwal221
+      - MONGO_INITDB_ROOT_PASSWORD=ujjwal6061
+    volumes:
+      - ./mongo-data:/data/db
+
+  redis:
+    image: redis:7.2
+    container_name: redis
+    networks:
+      - app-network
+    ports:
+      - "6379:6379"
+
+  kafka:
+    image: bitnami/kafka:3.6
+    container_name: kafka
+    ports:
+      - 9092:9092
+    environment:
+      - KAFKA_ENABLE_KRAFT=yes
+      - KAFKA_CFG_PROCESS_ROLES=broker,controller
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
+      - KAFKA_BROKER_ID=1
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=1@kafka:9093
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_NODE_ID=1
+      - KAFKA_KRAFT_CLUSTER_ID=MkU3OEVBNTcwNTJENDM2Qk
+    networks:
+      - app-network
+
+networks:
+  app-network:
+
+volumes:
+  mongo-data:
+    driver: local

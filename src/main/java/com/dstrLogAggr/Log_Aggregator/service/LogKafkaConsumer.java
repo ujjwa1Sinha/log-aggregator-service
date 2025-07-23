@@ -15,12 +15,12 @@ public class LogKafkaConsumer {
     @Autowired
     private LogBackRepo logRepo;
 
-    @KafkaListener(topics = "logData", groupId = "log-group")
+    @KafkaListener(topics = "log-data", groupId = "log-group")
     public void listen(String message) {
         try {
             LogEntry entry = mapper.readValue(message, LogEntry.class);
             logRepo.save(entry);
-            System.out.println("Log saved from Kafka: " + entry.getMessage());
+            System.out.println("Log saved from Kafka: ");
         } catch (Exception e) {
             System.err.println("Error parsing Kafka message: " + e.getMessage());
         }
