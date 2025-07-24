@@ -31,7 +31,7 @@ public class LogIngestionController {
 
         ObjectMapper mapper = new ObjectMapper();
 
-        System.out.println("Request body: "+ mapper.writeValueAsString(logEntry));
+        logger.info("Request body: "+ mapper.writeValueAsString(logEntry));
 
         logger.debug("Entered ingestLog method to save data in MongoDB");
 

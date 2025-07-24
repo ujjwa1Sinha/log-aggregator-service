@@ -39,6 +39,9 @@ services:
       - app-network
     ports:
       - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --save 60 1 --loglevel warning
 
   kafka:
     image: bitnami/kafka:3.6
@@ -66,3 +69,4 @@ networks:
 volumes:
   mongo-data:
     driver: local
+  redis-data:
