@@ -1,6 +1,19 @@
 version: '3.8'
 
 services:
+  nginx:
+    image: nginx:alpine
+    container_name: nginx-gateway
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - log-aggregator
+    networks:
+      - app-network
+
+
   log-aggregator:
     image: log-aggregator-service:2.0
     container_name: log-aggregator
