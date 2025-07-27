@@ -15,7 +15,7 @@ services:
 
 
   log-aggregator:
-    image: log-aggregator-service:2.0
+    image: log-aggregator-service:latest
     container_name: log-aggregator
     networks:
       - app-network
@@ -27,9 +27,10 @@ services:
       - redis
     environment:
       - MONGO_URI=mongodb+srv://sinhaujjwal221:ujjwal6061@cluster0.9raqwft.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
-      - KAFKA_BOOTSTRAP_SERVER=kafka:9092
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
       - KAFKA_TOPIC=log-data
       - REDIS_HOST=redis
+      - API_AUTH_TOKEN=YAZ2ryZBWYsK4g2HL0vP
 
 
   mongodb:
