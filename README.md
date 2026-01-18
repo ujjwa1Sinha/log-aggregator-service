@@ -838,7 +838,7 @@ For issues, questions, or feature requests:
 
 - 🐛 **Bug Reports:** [Open an issue](https://github.com/your-org/log-aggregator/issues)
 - 💡 **Feature Requests:** [Open an issue](https://github.com/your-org/log-aggregator/issues)
-- 📧 **Email:** support@example.com
+- 📧 **Email:** ujjwal6061@gmail.com
 - 💬 **Discussions:** [GitHub Discussions](https://github.com/your-org/log-aggregator/discussions)
 
 ---
