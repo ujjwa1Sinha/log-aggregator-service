@@ -13,7 +13,6 @@ services:
     networks:
       - app-network
 
-
   log-aggregator:
     image: log-aggregator-service:latest
     container_name: log-aggregator
@@ -23,39 +22,53 @@ services:
       - "8080:8080"
     depends_on:
       - kafka
-      - mongodb
-      - redis
+      - elasticsearch
     environment:
-      - MONGO_URI=mongodb+srv://sinhaujjwal221:ujjwal6061@cluster0.9raqwft.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
-      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
-      - KAFKA_TOPIC=log-data
-      - REDIS_HOST=redis
-      - API_AUTH_TOKEN=YAZ2ryZBWYsK4g2HL0vP
+      - MONGO_URI=${MONGO_URI}
+      - KAFKA_BOOTSTRAP_SERVERS=${KAFKA_BOOTSTRAP_SERVERS}
+      - KAFKA_TOPIC=${KAFKA_TOPIC}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_SSL=${REDIS_SSL}
+      - ELASTICSEARCH_URIS=${ELASTICSEARCH_URIS}
 
-
-  mongodb:
-    image: mongo:latest
-    container_name: mongodb
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - bootstrap.memory_lock=true
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+      - "9300:9300"
     networks:
       - app-network
-    ports:
-      - "27017:27017"
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=sinhaujjwal221
-      - MONGO_INITDB_ROOT_PASSWORD=ujjwal6061
-    volumes:
-      - ./mongo-data:/data/db
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
-  redis:
-    image: redis:7.2
-    container_name: redis
+  kibana:
+    image: docker.elastic.co/kibana/kibana:9.2.4
+    container_name: kibana
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    depends_on:
+      - elasticsearch
     networks:
       - app-network
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis-data:/data
-    command: redis-server --save 60 1 --loglevel warning
 
   kafka:
     image: bitnami/kafka:3.6
@@ -77,10 +90,27 @@ services:
     networks:
       - app-network
 
+  kafka-ui:
+  image: provectuslabs/kafka-ui
+  container_name: kafka-ui
+  ports:
+    - "8085:8080"
+  environment:
+    - KAFKA_CLUSTERS_0_NAME=local
+    - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9092
+  depends_on:
+    - kafka
+  networks:
+    - app-network
+
 networks:
   app-network:
+
 
 volumes:
   mongo-data:
     driver: local
   redis-data:
+    driver: local
+  elasticsearch-data:
+    driver: local
