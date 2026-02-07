@@ -1,17 +1,41 @@
-version: '3.8'
-
 services:
-  nginx:
-    image: nginx:alpine
-    container_name: nginx-gateway
+
+  mongodb:
+    image: mongo:7.0
+    container_name: mongodb
+    command: [ "--bind_ip_all" ]
     ports:
-      - "80:80"
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=admin123
+      - MONGO_INITDB_DATABASE=log-aggregator
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      - log-aggregator
+      - mongo-data:/data/db
+      - mongo-config:/data/configdb
     networks:
       - app-network
+    healthcheck:
+      test: [ "CMD", "mongosh", "-u", "admin", "-p", "admin123", "--authenticationDatabase", "admin", "--eval", "db.adminCommand('ping')" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    command: redis-server --requirepass ${REDIS_PASSWORD:-redis123}
+    volumes:
+      - redis-data:/data
+    networks:
+      - app-network
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   log-aggregator:
     image: log-aggregator-service:latest
@@ -21,8 +45,14 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - kafka
-      - elasticsearch
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      elasticsearch:
+        condition: service_healthy
     environment:
       - MONGO_URI=${MONGO_URI}
       - KAFKA_BOOTSTRAP_SERVERS=${KAFKA_BOOTSTRAP_SERVERS}
@@ -91,17 +121,17 @@ services:
       - app-network
 
   kafka-ui:
-  image: provectuslabs/kafka-ui
-  container_name: kafka-ui
-  ports:
-    - "8085:8080"
-  environment:
-    - KAFKA_CLUSTERS_0_NAME=local
-    - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9092
-  depends_on:
-    - kafka
-  networks:
-    - app-network
+    image: kafbat/kafka-ui
+    container_name: kafka-ui
+    ports:
+      - "8085:8080"
+    environment:
+      - KAFKA_CLUSTERS_0_NAME=local
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9092
+    depends_on:
+      - kafka
+    networks:
+      - app-network
 
 networks:
   app-network:
@@ -109,6 +139,8 @@ networks:
 
 volumes:
   mongo-data:
+    driver: local
+  mongo-config:
     driver: local
   redis-data:
     driver: local
