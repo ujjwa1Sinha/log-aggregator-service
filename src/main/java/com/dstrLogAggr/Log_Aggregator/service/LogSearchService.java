@@ -79,10 +79,10 @@ public class LogSearchService {
         if ("ERROR".equalsIgnoreCase(level)) {
             Page<LogEntryDocument> redisResults = searchErrorLogsInRedis(page, size);
             if (redisResults != null && redisResults.hasContent()) {
-                logger.info("✅ Found {} ERROR logs in Redis cache (fast path)", redisResults.getNumberOfElements());
+                logger.info("Found {} ERROR logs in Redis cache (fast path)", redisResults.getNumberOfElements());
                 return redisResults;
             }
-            logger.info("⚠️ No ERROR logs in Redis cache, falling back to Elasticsearch");
+            logger.info("No ERROR logs in Redis cache, falling back to Elasticsearch");
         }
 
         // Standard Elasticsearch search for all levels (including ERROR if not in
@@ -171,30 +171,30 @@ public class LogSearchService {
 
         // For ERROR logs, try Redis first (3-tier fallback: Redis → MongoDB → Empty)
         if ("ERROR".equalsIgnoreCase(level)) {
-            logger.info("🔍 Attempting Redis fallback for ERROR logs...");
+            logger.info("Attempting Redis fallback for ERROR logs...");
             try {
                 Page<LogEntryDocument> redisResults = searchErrorLogsInRedis(page, size);
                 if (redisResults != null && redisResults.hasContent()) {
-                    logger.info("✅ Found {} ERROR logs in Redis fallback", redisResults.getNumberOfElements());
+                    logger.info("Found {} ERROR logs in Redis fallback", redisResults.getNumberOfElements());
                     return redisResults;
                 }
-                logger.info("⚠️ No ERROR logs in Redis, falling back to MongoDB");
+                logger.info("No ERROR logs in Redis, falling back to MongoDB");
             } catch (Exception redisEx) {
                 logger.warn("Redis fallback failed, trying MongoDB", redisEx);
             }
         }
 
         // Standard MongoDB fallback for all levels (including ERROR if Redis failed)
-        logger.info("🔍 Attempting MongoDB fallback for {} logs...", level);
+        logger.info("Attempting MongoDB fallback for {} logs...", level);
         try {
             Pageable pageable = PageRequest.of(page, size, Sort.by("timestamp").descending());
             Page<LogEntry> mongoResults = mongoRepository.findByLevel(level, pageable);
             if (mongoResults.hasContent()) {
-                logger.info("✅ Found {} logs in MongoDB fallback", mongoResults.getNumberOfElements());
+                logger.info("Found {} logs in MongoDB fallback", mongoResults.getNumberOfElements());
             }
             return convertToDocumentPage(mongoResults);
         } catch (Exception mongoEx) {
-            logger.error("❌ MongoDB fallback also failed for level search", mongoEx);
+            logger.error("MongoDB fallback also failed for level search", mongoEx);
             return Page.empty();
         }
     }
@@ -272,8 +272,6 @@ public class LogSearchService {
             return Page.empty();
         }
     }
-
-    // ==================== Helper Methods ====================
 
     /**
      * Search ERROR logs in Redis cache (fast path)

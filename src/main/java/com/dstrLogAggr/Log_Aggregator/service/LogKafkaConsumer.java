@@ -70,7 +70,7 @@ public class LogKafkaConsumer {
     @Recover
     public void recover(Exception e, String message, Acknowledgment acknowledgment) throws JsonProcessingException {
         LogEntry entry = mapper.readValue(message, LogEntry.class);
-        logger.error("❌ Log processing failed after all retries. Log ID: {}", entry.getId(), e);
+        logger.error("Log processing failed after all retries. Log ID: {}", entry.getId(), e);
 
         // Send to Dead Letter Queue or alternative storage
         // For now, we'll let the fallback handle it
@@ -82,7 +82,7 @@ public class LogKafkaConsumer {
      * Circuit breaker fallback method
      */
     public void fallbackKafkaConsume(String message, Acknowledgment acknowledgment, Throwable ex) {
-        logger.error("⚠️ Circuit breaker activated for Kafka consumer. Message processing degraded.", ex);
+        logger.error("Circuit breaker activated for Kafka consumer.", ex);
 
         try {
             LogEntry entry = mapper.readValue(message, LogEntry.class);
@@ -91,7 +91,5 @@ public class LogKafkaConsumer {
         } catch (JsonProcessingException e) {
             logger.error("Failed to parse message in fallback", e);
         }
-
-        // Don't acknowledge - let Kafka retry
     }
 }

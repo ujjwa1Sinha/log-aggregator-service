@@ -100,13 +100,13 @@ public class LogPersistenceService {
      * Stores in Redis as temporary backup
      */
     private void fallbackSaveLog(LogEntry logEntry, Throwable ex) {
-        logger.error("❗ Primary storage failed. Using fallback for log: {}", logEntry.getId(), ex);
+        logger.error("Primary storage failed. Using fallback for log: {}", logEntry.getId(), ex);
         try {
             String fallbackKey = "FALLBACK_LOG:" + logEntry.getId();
             redisTemplate.opsForValue().set(fallbackKey, logEntry, Duration.ofHours(24));
             logger.info("Log saved to Redis fallback storage: {}", logEntry.getId());
         } catch (Exception redisEx) {
-            logger.error("❌ Critical: Both primary and fallback storage failed for log: {}", logEntry.getId(), redisEx);
+            logger.error("Critical: Both primary and fallback storage failed for log: {}", logEntry.getId(), redisEx);
             // Last resort: could write to local file or send to DLQ
         }
     }
@@ -115,7 +115,7 @@ public class LogPersistenceService {
      * Fallback when Elasticsearch indexing fails
      */
     private CompletableFuture<Void> fallbackElasticsearchSave(LogEntry logEntry, Throwable ex) {
-        logger.warn("⚠️ Elasticsearch indexing failed for log: {}. Log still available in MongoDB.", logEntry.getId(),
+        logger.warn("Elasticsearch indexing failed for log: {}. Log still available in MongoDB.", logEntry.getId(),
                 ex);
         // Log is already in MongoDB, so search functionality is degraded but data is
         // safe
@@ -144,7 +144,7 @@ public class LogPersistenceService {
     }
 
     private void fallbackBatchSave(Iterable<LogEntry> logEntries, Throwable ex) {
-        logger.error("❗ Batch save failed. Attempting individual saves", ex);
+        logger.error("Batch save failed. Attempting individual saves", ex);
         logEntries.forEach(logEntry -> {
             try {
                 fallbackSaveLog(logEntry, ex);
